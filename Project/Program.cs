@@ -2,10 +2,16 @@
 using System;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 internal class Program
 {
     public static void Main(string[] args)
+    {
+        Game();
+    }
+
+    public static void Game()//запуск игры
     {
         int size_of_deck = 35;
         int[,] Cards = Create_Desk();
@@ -13,6 +19,7 @@ internal class Program
 
         int[,] Players_Cards_0 = new int[36, 2];
         int[,] Players_Cards_1 = new int[36, 2];
+
         for (int i = 0; i < 36; i++)
         {
             Players_Cards_0[i, 0] = -1;
@@ -24,15 +31,20 @@ internal class Program
         Give_Cards_To_Players(ref Cards, ref size_of_deck, ref Players_Cards_0);
         Give_Cards_To_Players(ref Cards, ref size_of_deck, ref Players_Cards_1);
 
-        int trump = Cards[13,0]; //козырь
+        int trump = Cards[13, 0];//козырь
+        int[] trump_card = [Cards[13, 0], Cards[13, 1]];
+        Cards[13, 0] = Cards[23,0];
+        Cards[13, 1] = Cards[23,1];
+        Cards[35, 0] = trump_card[0];
+        Cards[35, 1] = trump_card[1];
         Trump_Output(trump);
 
         int next_move = First_Move(Players_Cards_0, Players_Cards_1, trump);
 
         while (true)
         {
-            int amount_0 = amount_of_cards( ref Players_Cards_0);
-            int amount_1 = amount_of_cards(ref Players_Cards_1);
+            int amount_0 = Amount_of_cards(ref Players_Cards_0);
+            int amount_1 = Amount_of_cards(ref Players_Cards_1);
 
             if (amount_0 + size_of_deck == -1)
             {
@@ -40,9 +52,9 @@ internal class Program
                 break;
             }
 
-            if(amount_1 + size_of_deck == -1)
+            if (amount_1 + size_of_deck == -1)
             {
-                Console.WriteLine("Победил Компьютер!"); 
+                Console.WriteLine("Победил Компьютер!");
                 break;
             }
 
@@ -59,30 +71,29 @@ internal class Program
             next_move = Step(ref Players_Cards_0, ref Players_Cards_1, next_move, trump);
 
         }
-        
     }
 
-    public static int amount_of_cards(ref int[,] array)
+    public static int Amount_of_cards(ref int[,] array) //определение количества карт
     {
         int count = 0;
         for (int x = 0; x < 36; x++)
         {
-            if (array[x,0] != -1)
+            if (array[x, 0] != -1)
             {
                 count++;
             }
         }
-        return count; 
+        return count;
     }
 
-    public static int First_Move(int[,] first_players_deck, int[,] second_players_deck, int trump) //только для первого раза
+    public static int First_Move(int[,] first_players_deck, int[,] second_players_deck, int trump) //определение того, кто будет ходить первым
     {
         int first_players_min = 0;
         int second_players_min = 0;
         int winner = -1;
         for (int i = 0; i < 6; i++)
         {
-            if (first_players_deck[i,0] == trump) 
+            if (first_players_deck[i, 0] == trump)
                 first_players_min = first_players_deck[i, 1];
 
             if (second_players_deck[i, 0] == trump)
@@ -94,11 +105,11 @@ internal class Program
             winner = 0;
 
 
-        else if(first_players_min < second_players_min)
+        else if (first_players_min < second_players_min)
             winner = 1;
 
 
-        else if(first_players_min == second_players_min)
+        else if (first_players_min == second_players_min)
         {
             Random rnd = new Random();
             winner = rnd.Next(0, 2);
@@ -107,7 +118,7 @@ internal class Program
         return winner;
     }
 
-    public static int Step(ref int[,] card_deck_0,ref int[,] card_deck_1, int winner, int trump)
+    public static int Step(ref int[,] card_deck_0, ref int[,] card_deck_1, int winner, int trump)// Один полноценный ход
     {
         int next = winner;
         int[,] Desk_play = new int[13, 2]; //игровая доска
@@ -120,27 +131,29 @@ internal class Program
 
         int[,] Attack_deck = new int[36, 2];
         int[,] Defence_deck = new int[36, 2];
-
+        int amount_of_cards;
         if (winner == 0)
         {
             Attack_deck = card_deck_0;
             Defence_deck = card_deck_1;
+            amount_of_cards = Amount_of_cards(ref Defence_deck);
         }
 
         else
         {
             Attack_deck = card_deck_1;
             Defence_deck = card_deck_0;
+            amount_of_cards = Amount_of_cards(ref Defence_deck);
         }
 
-        for (int i = 0; i < 12; i+=2)
+        for (int i = 0; i < amount_of_cards*2; i += 2)
         {
-            int[] attack_card = {0, 0};
+            int[] attack_card = { 0, 0 };
             if (winner == 0)
             {
                 int number;
-                while(true)//проверка на ввод ++
-                { 
+                while (true)//проверка на ввод ++
+                {
                     int test = 0;
                     Console.WriteLine("------------------------------------------------");
                     Console.Write("Выберите карту, если ходить нечем, введите 0 : ");
@@ -157,7 +170,7 @@ internal class Program
 
                     attack_card[0] = Attack_deck[number, 0];
                     attack_card[1] = Attack_deck[number, 1];
-                    
+
                     if (attack_card[0] != -1)
                     {
                         test++;
@@ -169,13 +182,13 @@ internal class Program
                             if (attack_card[1] == Desk_play[d, 1])
                             {
                                 test++;
-                                
+
                                 break;
                             }
                         }
                     }
                     else { test++; }
-                    
+
                     if (test == 2)
                     {
                         Console.WriteLine("------------------------------------------------");
@@ -190,51 +203,70 @@ internal class Program
                 }
             }
 
-            if(winner == 1) 
+            if (winner == 1)
             {
-          
+
                 while (true)
                 {
-                    int min = 10;
-                    int iter = 0;
-                    for ( int d = 0; d < 36; d++ )
+                    int min = 16;
+                    int min_trump = 16;
+                    int iteration = -1;
+                    int iteration_trump = -1;
+                    for (int d = 0; d < 36; d++)
                     {
                         for (int k = 0; k < 12; k++)
                         {
                             if (i == 0)
                             {
-                                if (Attack_deck[d,0] != trump && Attack_deck[d,0] != -1)
+                                if (Attack_deck[d, 0] != trump && Attack_deck[d, 0] != -1)
                                 {
-                                    if (Attack_deck[d,1] < min)
+                                    if (Attack_deck[d, 1] < min)
                                     {
                                         min = Attack_deck[d, 1];
-                                        iter = d;
+                                        iteration = d;
+                                    }
+                                }
+                                else if (Attack_deck[d, 0] == trump && Attack_deck[d, 0] != -1)
+                                {
+                                    if (Attack_deck[d, 1] < min_trump)
+                                    {
+                                        min_trump = Attack_deck[d, 1];
+                                        iteration_trump = d;
                                     }
                                 }
                             }
                             else
                             {
-                                if (Attack_deck[d, 1] == Desk_play[k,1] && Attack_deck[d, 0] != -1)
+                                if (Attack_deck[d, 1] == Desk_play[k, 1] && Attack_deck[d, 0] != -1)
                                 {
                                     if (Attack_deck[d, 1] < min)
                                     {
                                         min = Attack_deck[d, 1];
-                                        iter = d;
+                                        iteration = d;
                                     }
                                 }
                             }
                         }
                     }
 
-                    if (min != 10)
+                    if (min != 16)//совершить ход обычной картой
                     {
-                        attack_card[0] = Attack_deck[iter, 0];
-                        attack_card[1] = Attack_deck[iter, 1];
-                        Attack_deck[iter, 0] = -1;
-                        Attack_deck[iter, 1] = -1;
+                        attack_card[0] = Attack_deck[iteration, 0];
+                        attack_card[1] = Attack_deck[iteration, 1];
+                        Attack_deck[iteration, 0] = -1;
+                        Attack_deck[iteration, 1] = -1;
                         break;
                     }
-                    if (min == 10)
+                    else if (min_trump != 16)//совершить ход козырем
+                    {
+                        attack_card[0] = Attack_deck[iteration_trump, 0];
+                        attack_card[1] = Attack_deck[iteration_trump, 1];
+                        Attack_deck[iteration_trump, 0] = -1;
+                        Attack_deck[iteration_trump, 1] = -1;
+
+                        break;
+                    }
+                    if (min == 16)//нет во
                     {
                         Console.WriteLine("------------------------------------------------");
                         Console.WriteLine("Бито");
@@ -261,50 +293,40 @@ internal class Program
                 int min_trump = 16;
                 int iteration_trump = -1;
                 int iteration = -1;
-                
-                for (int j = 0; j < Defence_deck.Length/2; j++)
+
+                for (int j = 0; j < Defence_deck.Length / 2; j++)//находим минимально возможную карту для хода
                 {
-                    
+
                     if (Defence_deck[j, 0] != -1)//убираем мусор
                     {
-                        if (Defence_deck[j, 0] == Desk_play[i, 0])//сверяем масть
+                        if (Defence_deck[j, 0] == Desk_play[i, 0] && Defence_deck[j, 1] > Desk_play[i, 1] && Defence_deck[j, 1] < min)//сверяем масть + значение карты
                         {
-                            if (Defence_deck[j, 1] > Desk_play[i, 1])//сверяем значение карт
-                            {
-                                if (Defence_deck[j,1] < min)
-                                {
-                                    min = Defence_deck[j,1];
-                                    iteration = j;
-                                }
-
-                            }
+                            min = Defence_deck[j, 1];
+                            iteration = j;
                         }
-                        else if (Defence_deck[j,0] == trump && Desk_play[i,0] != trump) //при козыре
+                        else if (Defence_deck[j, 0] == trump && Desk_play[i, 0] != trump && Defence_deck[j, 1] < min_trump) //при козыре
                         {
-                            if (Defence_deck[j, 1] < min_trump)
-                            {
-                                min_trump = Defence_deck[j, 1];
-                                iteration_trump = j;
-                            }
+                            min_trump = Defence_deck[j, 1];
+                            iteration_trump = j;
                         }
 
                     }
 
 
                 }
-                if (iteration != -1)
+                if (iteration != -1)//компьютер может отбиться обычной картой
                 {
                     int[] defense_card = defence_card_return(ref Defence_deck, iteration, ref Desk_play, i);
                     Output_for_Computer(defense_card, trump, Desk_play, Attack_deck);
 
                 }
-                else if(iteration_trump != -1)
+                else if (iteration_trump != -1)//компьютер может отбиться козырной картой
                 {
                     int[] defense_card = defence_card_return(ref Defence_deck, iteration_trump, ref Desk_play, i);
                     Output_for_Computer(defense_card, trump, Desk_play, Attack_deck);
 
                 }
-                else
+                else//компьютер не может отбиться
                 {
                     for (int x = 0; x < 12; x++)
                     {
@@ -334,86 +356,62 @@ internal class Program
             }
 
 
-            if(winner == 1) 
+            if (winner == 1)
             {
-
-                int count = 0;
-                
-                for (int n = 0; n < Defence_deck.Length / 2; n++)
+                while (true)
                 {
-                    if (Desk_play[i, 0] == Defence_deck[n, 0])
+                    Console.Write("Выберите карту для защиты, либо введите 0, чтобы забрать: ");
+                    int number = Check_Input();
+                    if (number == -1)
                     {
-                        if (Desk_play[i, 1] < Defence_deck[n, 1])
+                        for (int x = 0; x < 12; x++)
                         {
-                            count++;
-                        }
-                    }
-                    else if (Desk_play[i, 0] != trump & Defence_deck[n,0] == trump)
-                    {
-                        count++;
-                    }
-                }
-
-                if (count == 0)
-                {
-                    for (int x = 0; x < 12; x++)
-                    {
-                        if (Desk_play[x, 1] != -1)
-                        {
-                            for (int y = 0; y < 36; y++)
+                            if (Desk_play[x, 1] != -1)
                             {
-                                if (Defence_deck[y,1] == -1)
+                                for (int y = 0; y < 36; y++)
                                 {
-                                    Defence_deck[y, 0] = Desk_play[x, 0];
-                                    Defence_deck[y, 1] = Desk_play[x, 1];
-                                    Desk_play[x, 0] = -1;
-                                    Desk_play[x, 1] = -1;
-                                    break;
+                                    if (Defence_deck[y, 1] == -1)
+                                    {
+                                        Defence_deck[y, 0] = Desk_play[x, 0];
+                                        Defence_deck[y, 1] = Desk_play[x, 1];
+                                        Desk_play[x, 0] = -1;
+                                        Desk_play[x, 1] = -1;
+                                        break;
+                                    }
                                 }
                             }
                         }
+                        Console.WriteLine("Вы забираете");
+                        card_deck_0 = Defence_deck;
+                        card_deck_1 = Attack_deck;
+                        next = 1;
+                        return next;
+                            
+                            
                     }
-                    card_deck_0 = Defence_deck;
-                    card_deck_1 = Attack_deck;
-                    Console.WriteLine("Вы не можете отбиться");
-                    System.Threading.Thread.Sleep(1000);
-                    next = 1;
-                    return next;
-
-                }
-
-                if (count != 0)
-                {
-                    while (true)
+                    if (Defence_deck[number, 0] == Desk_play[i, 0]) //сверка масти
                     {
-                        Console.Write("Выберите карту для защиты: ");
-                        int number = Check_Input();
-                        
-                        if (Defence_deck[number, 0] == Desk_play[i, 0]) //сверка масти
-                        {
-                            if (Defence_deck[number, 1] > Desk_play[i, 1]) //сверка значений
-                            {
-                                int[] defense_card = defence_card_return(ref Defence_deck, number, ref Desk_play, i);
-                                Output_for_Player(defense_card, trump, Desk_play, Defence_deck);
-                                break;
-                            }
-                        }
-                        else if (Defence_deck[number, 0] == trump & Desk_play[i,0] != trump)
+                        if (Defence_deck[number, 1] > Desk_play[i, 1]) //сверка значений
                         {
                             int[] defense_card = defence_card_return(ref Defence_deck, number, ref Desk_play, i);
                             Output_for_Player(defense_card, trump, Desk_play, Defence_deck);
                             break;
                         }
                     }
+                    else if (Defence_deck[number, 0] == trump & Desk_play[i, 0] != trump)
+                    {
+                        int[] defense_card = defence_card_return(ref Defence_deck, number, ref Desk_play, i);
+                        Output_for_Player(defense_card, trump, Desk_play, Defence_deck);
+                        break;
+                    }
                 }
             }
         }
 
         return 0;
-
     }
 
-    public static int Check_Input()
+    public static int Check_Input()//проверка вводных значение игрока
     {
         int number;
         while (true)
@@ -436,7 +434,7 @@ internal class Program
         }
         return number;
     }
-    public static int[] defence_card_return(ref int[,] Defence_deck, int iteration, ref int[,] Desk_play, int i)
+    public static int[] defence_card_return(ref int[,] Defence_deck, int iteration, ref int[,] Desk_play, int i)//Перенос карты из колоды на поле
     {
         int[] defense_card = new int[2];
         defense_card[0] = Defence_deck[iteration, 0];
@@ -450,11 +448,10 @@ internal class Program
         return defense_card;
     }
 
-    public static void Output_for_Player(int[] defense_card, int trump, int[,] Desk_play, int[,] Defence_deck)
+    public static void Output_for_Player(int[] defense_card, int trump, int[,] Desk_play, int[,] Defence_deck)//вывод информации для игрока
     {
         Console.Write("Вы отбились картой: ");
         MinOutput(defense_card);
-        Console.WriteLine();
         Console.WriteLine("------------------------------------------------");
         Console.WriteLine("Игровая доска:");
         Output(Desk_play, trump);
@@ -463,7 +460,7 @@ internal class Program
         Output(Defence_deck, trump);
     }
 
-    public static void Output_for_Computer(int[] defense_card, int trump, int[,] Desk_play, int[,] Attack_deck)
+    public static void Output_for_Computer(int[] defense_card, int trump, int[,] Desk_play, int[,] Attack_deck)//вывод информации для колмпьютера
     {
         Console.Write("Компьютер отбиваeтся картой : ");
         MinOutput(defense_card);
@@ -476,9 +473,9 @@ internal class Program
 
     }
 
-    public static void Trump_Output(int trump)
+    public static void Trump_Output(int trump)//вывод козырной масти
     {
-        switch(trump)
+        switch (trump)
         {
             case 0: Console.WriteLine("Козырь: Черви");
                 break;
@@ -491,7 +488,7 @@ internal class Program
         }
     }
 
-    public static void MinOutput(int[] array)
+    public static void MinOutput(int[] array)//вывод карты
     {
         switch (array[0])
         {
@@ -542,19 +539,19 @@ internal class Program
         }
     }
 
-    public static void Output(int[,] array, int trump) 
+    public static void Output(int[,] array, int trump)//вывод колоды игрока/компьютера
     {
-        for (int i = 0; i < array.Length/2; ++i)
+        for (int i = 0; i < array.Length / 2; ++i)
         {
-            if (array[i,0] != -1)
+            if (array[i, 0] != -1)
             {
-                Console.Write((i+1) + ": ");
+                Console.Write((i + 1) + ": ");
             }
             switch (array[i, 0])
             {
                 case 0:
-                    if(trump == 0) { Console.Write("Черви (козырь) "); }
-                    else { Console.Write( "Черви "); }
+                    if (trump == 0) { Console.Write("Черви (козырь) "); }
+                    else { Console.Write("Черви "); }
                     break;
 
                 case 1:
@@ -607,12 +604,12 @@ internal class Program
             }
 
         }
-    
+
     }
 
-    public static int[,] Create_Desk() 
+    public static int[,] Create_Desk()//Создание колоды
     {
-        int [,] card_stack = new int[36, 2];
+        int[,] card_stack = new int[36, 2];
 
         int n = 0;
         for (int i = 0; i < 4; i++)
@@ -637,7 +634,7 @@ internal class Program
         return card_stack;
     }
 
-    public static int[,] Shuffle(int[,] array)
+    public static int[,] Shuffle(int[,] array)//перемешивание колоды
     {
         var random = new Random();
         for (int i = 35; i >= 0; i--)
@@ -652,8 +649,8 @@ internal class Program
         }
         return array;
     }
-
-    public static void Give_Cards_To_Players(ref int[,] array, ref int n,ref int[,] players_cards)
+  
+    public static void Give_Cards_To_Players(ref int[,] array, ref int n,ref int[,] players_cards)//раздача карт игроку и компьютеру
     {
 
         int count = 0; 
